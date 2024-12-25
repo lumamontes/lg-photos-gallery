@@ -109,7 +109,7 @@ export default Project
 export async function getStaticProps({params}) {
   const { slug } = params;
   await avoidRateLimit();
-  const entry: MyEntry = await client.getEntries({
+  const entry = await client.getEntries({
     content_type: 'project', // Replace with the correct content type for your project entries
     'fields.uuid': slug,
     limit: 1,
@@ -119,7 +119,7 @@ export async function getStaticProps({params}) {
     return { notFound: true };
   }
   
-  const project = entry.items[0];
+  const project = entry.items[0] as any;
   const project_images = project.fields.assets.map((asset) => ({
     height: asset.fields.file.details.image.height,
     width: asset.fields.file.details.image.width,
