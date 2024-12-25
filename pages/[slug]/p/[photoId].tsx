@@ -1,12 +1,10 @@
-import type { GetStaticPaths, GetStaticProps, NextPage } from 'next'
-import Head from 'next/head'
-import { useRouter } from 'next/router'
-import Carousel from '@/components/Carousel'
-import getResults from '@/utils/cachedImages'
-import type { ImageProps } from '@/utils/types'
-import client from 'libs/contentful'
-import { getHashString } from '@/utils/getHashString'
-import { getBlurData } from '@/utils/blur-data-generator'
+import type { GetStaticPaths, GetStaticProps, NextPage } from 'next';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import Carousel from '@/components/Carousel';
+import type { ImageProps } from '@/utils/types';
+import client from 'libs/contentful';
+import { getBlurData } from '@/utils/blur-data-generator';
 
 interface PhotoIdProps {
   currentPhoto: ImageProps;
@@ -14,77 +12,89 @@ interface PhotoIdProps {
 
 const PhotoId: NextPage<PhotoIdProps> = ({ currentPhoto }) => {
   const router = useRouter();
-
-  const { photoId, slug } = router.query as { photoId: string, slug: string };
+  const { slug } = router.query as { slug: string };
   
-  let index = Number(photoId);
-
-  if (currentPhoto == undefined) {
-    return <div>Photo not found.</div>;
+  if (!currentPhoto) {
+    return <div>Photo not found./ Foto não encontrada.</div>;
   }
-  
-  const currentPhotoUrl = 'https://res.cloudinary.com/' + process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME + '/image/upload/c_scale,w_2560/' + currentPhoto.public_id + '.' + currentPhoto.format;
 
+  const currentPhotoUrl = `https:${currentPhoto.url}`;
+  console.log('currentPhotoUrl', currentPhotoUrl)
   return (
     <>
       <Head>
         <meta property="og:image" content={currentPhotoUrl} />
         <meta name="twitter:image" content={currentPhotoUrl} />
       </Head>
-       <div className="relative mx-auto max-w-[1960px] h-full p-4">
-        <Carousel currentPhoto={currentPhoto} index={index} slug={slug}/>
-      </div> 
+      <div className="relative mx-auto max-w-[1960px] h-full p-4">
+        <Carousel index={currentPhoto.id} currentPhoto={currentPhoto} slug={slug} />
+      </div>
     </>
-  )
-}
-
-export default PhotoId
-
+  );
+};
 
 export async function getStaticPaths() {
-  await avoidRateLimit()
-  const entry: any = await client.getEntry('5LfwKllpyXoFuxsbyBaYvC');
-  const projects = entry.fields.projects;
+  const entry = await client.getEntry('ECYHyqz3zOKgJ4f5XaD3V') as any; // Replace with the correct ID for the main entry containing projects
 
-
-  const totalPaths = projects.reduce((paths, project) => {
-    const numAssets = project.fields.assets.length;
-    for (let i = 0; i < numAssets; i++) {
-      const public_id = project.fields.assets[i].public_id;
-      const photoId = getHashString(public_id).toString(); // Convert photoId to a string
-      paths = paths.concat({ params: { slug: project.sys.id, photoId } });
-    }
-    return paths;
-  }, []);
+  const projects = entry.fields.project
+  const paths = projects.flatMap((project) =>
+    (project.fields.assets).map((asset) =>
+       ({
+      params: {
+        slug: project.fields.uuid, // Use `uuid` as the slug
+        photoId: asset.fields.title, // Use the asset's sys.id as the photoId
+      },
+    })
+  )
+  );
 
   return {
-    paths: totalPaths,
-    fallback: false,
+    paths,
+    fallback: false, // Change to 'blocking' if using ISR
   };
 }
 
-export const getStaticProps: GetStaticProps = async (context) => {
-  await avoidRateLimit()
-  const { params } = context;
-  const { slug, photoId } = params;
-  const { results: images } = await getResults({ slug });
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const { slug, photoId } = params as { slug: string; photoId: string };
 
-  const currentPhoto = images.find((img) => img.id == photoId)
-  const url = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_jpg,w_8,q_70/${currentPhoto.public_id}.${currentPhoto.format}`
-  const { base64 } = await getBlurData(url)
-  currentPhoto.blurDataUrl = base64
+  // Fetch project by slug (uuid)
+  const entry = await client.getEntries({
+    content_type: 'project', // Replace with your Contentful content type for projects
+    'fields.uuid': slug,
+    limit: 1,
+  });
+
+  if (!entry.items.length) {
+    return { notFound: true };
+  }
+
+  const project = entry.items[0] as any;
+  const asset = project.fields.assets.find((a: any) => a.fields.title === photoId);
+
+  if (!asset) {
+    return { notFound: true };
+  }
+
+  const currentPhoto: ImageProps = {
+    id: asset.fields.title,
+    public_id: asset.sys.id, // Optional, if sys.id is required elsewhere
+    format: asset.fields.file.contentType.split('/')[1],
+    url: asset.fields.file.url, // Use the image URL from Contentful
+    height: asset.fields.file.details.image.height,
+    width: asset.fields.file.details.image.width,
+  };
+
+  // Generate blur data for the image
+  const blurImageUrl = `https:${currentPhoto.url}`;
+  const { base64 } = await getBlurData(blurImageUrl);
+  currentPhoto.blurDataUrl = base64;
 
   return {
     props: {
-      currentPhoto: currentPhoto,
+      currentPhoto,
     },
   };
-}
+};
 
 
-
-export function avoidRateLimit(delay = 500) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, delay)
-  })
-}
+export default PhotoId;

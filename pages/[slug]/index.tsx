@@ -1,18 +1,13 @@
-import type { GetStaticPaths, NextPage } from 'next'
-import Head from 'next/head'
+import type { NextPage } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useRef } from 'react'
-import Bridge from '@/components/Icons/Bridge'
-import Logo from '@/components/Icons/Logo'
 import Modal from '@/components/Modal'
 import type { ImageProps } from '@/utils/types'
 import { useLastViewedPhoto } from '@/utils/useLastViewedPhoto'
 import client from 'libs/contentful'
 import {  Entry } from 'contentful';
-import { documentToReactComponents } from '@contentful/rich-text-react-renderer';
-import { getHashString } from '@/utils/getHashString';
 import { getBlurData } from '@/utils/blur-data-generator'
 
 interface ProjectSlugProps {
@@ -39,7 +34,7 @@ interface AboutPageFields {
 interface MyEntry extends Entry<AboutPageFields>{};
 
 
-const Project: NextPage = ({ images, entry }: ProjectSlugProps) => {
+const Project: NextPage<ProjectSlugProps> = ({ images, entry }) => {
   const router = useRouter()
   const { photoId, slug } = router.query
   const [lastViewedPhoto, setLastViewedPhoto] = useLastViewedPhoto()
@@ -53,7 +48,6 @@ const Project: NextPage = ({ images, entry }: ProjectSlugProps) => {
       setLastViewedPhoto(null)
     }
   }, [photoId, lastViewedPhoto, setLastViewedPhoto])
-
 
   return (
     <>
@@ -71,46 +65,35 @@ const Project: NextPage = ({ images, entry }: ProjectSlugProps) => {
             <h1 className="mt-8 mb-4 text-base font-bold uppercase tracking-widest">
                 {entry.title}
             </h1>
-            <p className="max-w-[40ch] text-gray-800/75 sm:max-w-[32ch]">
-                {entry.smallDescription}
-            </p>
             <div>
-              {documentToReactComponents(entry.fullDescription)}
+              {entry.smallDescription}
             </div>
             <Link
               className="pointer z-10 mt-6 rounded-lg border bg-black px-3 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 md:mt-4"
               href="/"
             >
-              Explore more projects
+              Explore more projects / Explorar 
             </Link>
           </div>
-          {images.map(({ id, public_id, format, blurDataUrl }) => (
+          {images.map(({ id, url, format, blurDataUrl }) => (
             <Link
               key={id}
-              href={{
-                pathname: `/${slug}`,
-                query: {photoId: getHashString(public_id)},
-              }
-              }
-              as={`/${slug}/p/${getHashString(public_id)}`}
+              href={`/${entry.uuid}?photoId=${id}`}
+              as={`/${entry.uuid}/p/${(id)}`}
               ref={id === Number(lastViewedPhoto) ? lastViewedPhotoRef : null}
               shallow
-              className="after:content group relative mb-5 block w-full cursor-zoom-in after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:shadow-highlight"
-              // className="after:content group relative mb-5 block w-full cursor-zoom-in after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:shadow-highlight"
+              className="relative mb-5 block w-full cursor-zoom-in group after:content-none after:absolute after:inset-0 after:rounded-lg after:shadow-highlight"
             >
               <Image
                 alt="Gallery photo"
-                className="transform rounded-lg brightness-90 transition will-change-auto group-hover:brightness-110"
+                className="transform rounded-lg brightness-90 transition group-hover:brightness-110"
                 style={{ transform: 'translate3d(0, 0, 0)' }}
                 placeholder="blur"
                 blurDataURL={blurDataUrl}
-                src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_scale,w_720/${public_id}.${format}`}
+                src={`https:${url}`}
                 width={720}
                 height={480}
-                sizes="(max-width: 640px) 100vw,
-                  (max-width: 1280px) 50vw,
-                  (max-width: 1536px) 33vw,
-                  25vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, (max-width: 1536px) 33vw, 25vw"
               />
             </Link>
           ))}
@@ -126,46 +109,39 @@ export default Project
 export async function getStaticProps({params}) {
   const { slug } = params;
   await avoidRateLimit();
-  const entry: MyEntry = await client.getEntry(slug);
-  const project_images = {
-    results: entry.fields.assets.map(asset => {
-      return {
-        height: asset.height,
-        width: asset.width,
-        public_id: asset.public_id,
-        format: asset.format,
-      }
-    })}
-  let reducedResults: ImageProps[] = []
+  const entry: MyEntry = await client.getEntries({
+    content_type: 'project', // Replace with the correct content type for your project entries
+    'fields.uuid': slug,
+    limit: 1,
+  });
 
-  let i = 0
-  for (let result of project_images.results) {
-    reducedResults.push({
-      id: i,
-      height: result.height,
-      width: result.width,
-      public_id: result.public_id,
-      format: result.format,
-    })
-    i++
+  if (!entry.items.length) {
+    return { notFound: true };
   }
+  
+  const project = entry.items[0];
+  const project_images = project.fields.assets.map((asset) => ({
+    height: asset.fields.file.details.image.height,
+    width: asset.fields.file.details.image.width,
+    public_id: asset.sys.id,
+    format: asset.fields.file.contentType.split('/')[1], // Get file format from contentType
+    url: asset.fields.file.url,
+    title: asset.fields.title,
+  }));
 
-  const blurImagePromises = project_images.results.map(async (image: ImageProps) => {
-    const url = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_jpg,w_8,q_70/${image.public_id}.${image.format}`
-    const { base64 } = await getBlurData(url)
-    return base64
-  })
+  // Generate blur data for images
+  const blurImagePromises = project_images.map(async (image) => {
+    const url = `https:${image.url}`;
+    const { base64 } = await getBlurData(url);
+    return { ...image, blurDataUrl: base64, id: image.title };
+  });
 
-  const imagesWithBlurDataUrls = await Promise.all(blurImagePromises)
+  const imagesWithBlurDataUrls = await Promise.all(blurImagePromises);
 
-  for (let i = 0; i < reducedResults.length; i++) {
-    reducedResults[i].blurDataUrl = imagesWithBlurDataUrls[i]
-  }
-  console.log(reducedResults)
   return {
     props: {
-      images: reducedResults,
-      entry: entry.fields
+      images: imagesWithBlurDataUrls,
+      entry: project.fields,
     },
   }
 }
@@ -173,14 +149,13 @@ export async function getStaticProps({params}) {
 
 export async function getStaticPaths() {
   await avoidRateLimit();
-  const entry: any = await client.getEntry('5LfwKllpyXoFuxsbyBaYvC');
+  const entry: any = await client.getEntry('ECYHyqz3zOKgJ4f5XaD3V');
 
   let fullPaths = [];
 
-  entry.fields.projects.map(project => {
-    fullPaths.push({ params: { slug: project.sys.id } })
+  entry.fields.project.map(project => {
+    fullPaths.push({ params: { slug: project.fields.uuid } })
   })
-
 
   return {
     paths: fullPaths,

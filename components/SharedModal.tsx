@@ -11,10 +11,8 @@ import Image from "next/image";
 import { useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import { variants } from "../utils/animationVariants";
-import downloadPhoto from "../utils/downloadPhoto";
 import { range } from "../utils/range";
 import type { ImageProps, SharedModalProps } from "../utils/types";
-import Twitter from "./Icons/Twitter";
 
 export default function SharedModal({
   index,
@@ -26,6 +24,8 @@ export default function SharedModal({
   direction,
 }: SharedModalProps) {
   const [loaded, setLoaded] = useState(false);
+
+  // Filter images for performance
   let filteredImages = images?.filter((img: ImageProps) =>
     range(index - 15, index + 15).includes(img.id)
   );
@@ -44,7 +44,16 @@ export default function SharedModal({
     trackMouse: true,
   });
 
+  function handleDownload(photo)
+  {
+    window.open(`https:${photo.url}`, '_blank');
+  }
+
   let currentImage = images ? images[index] : currentPhoto;
+
+  if(!currentImage){
+    return <div>Imagem não encontrada</div>
+  }
 
   return (
     <MotionConfig
@@ -71,13 +80,9 @@ export default function SharedModal({
                 className="absolute"
               >
                 <Image
-                  src={`https://res.cloudinary.com/${
-                    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-                  }/image/upload/c_scale,${navigation ? 'w_1280' : 'w_1920'}/${
-                    currentImage.public_id
-                  }.${currentImage.format}`}
-                  width={navigation ? 1000 : 1000} // Adjusted width
-                  height={navigation ? 733 : 673} // Adjusted height
+                  src={`https:${currentImage.url}`}
+                  width={navigation ? 1280 : 1920}
+                  height={(navigation ? 1280 : 1920) * (2 / 3)} // Aspect ratio 3:2
                   priority
                   alt="Main photo"
                   onLoad={() => setLoaded(true)}
@@ -87,8 +92,8 @@ export default function SharedModal({
           </div>
         </div>
 
-        {/* Buttons + bottom nav bar */}
-        <div className="absolute inset-0 mx-auto flex max-w-7xl items-center justify-center">
+          {/* Buttons + bottom nav bar */}
+          <div className="absolute inset-0 mx-auto flex max-w-7xl items-center justify-center">
           {/* Buttons */}
           {loaded && (
             <div className="relative aspect-[3/2] max-h-full w-full">
@@ -96,7 +101,7 @@ export default function SharedModal({
                 <>
                   {index > 0 && (
                     <button
-                      className="absolute left-3 top-[calc(50%-16px)] rounded-full bg-blue-800/50 p-3 text-gray-200/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-gray-200 focus:outline-none"
+                      className="absolute left-3 top-[calc(50%-16px)] rounded-full bg-black/50 p-3 text-white/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-white focus:outline-none"
                       style={{ transform: "translate3d(0, 0, 0)" }}
                       onClick={() => changePhotoId(index - 1)}
                     >
@@ -105,7 +110,7 @@ export default function SharedModal({
                   )}
                   {index + 1 < images.length && (
                     <button
-                      className="absolute right-3 top-[calc(50%-16px)] rounded-full bg-blue-800/50 p-3 text-gray-200/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-gray-200 focus:outline-none"
+                      className="absolute right-3 top-[calc(50%-16px)] rounded-full bg-black/50 p-3 text-white/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-white focus:outline-none"
                       style={{ transform: "translate3d(0, 0, 0)" }}
                       onClick={() => changePhotoId(index + 1)}
                     >
@@ -114,45 +119,19 @@ export default function SharedModal({
                   )}
                 </>
               )}
-              <div className="absolute right-0 top-0 flex items-center gap-2 p-3 text-gray-200">
-                {navigation ? (
-                  <a
-                    href={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${currentImage.public_id}.${currentImage.format}`}
-                    className="rounded-full bg-black/50 p-2 text-gray-200/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-gray-200"
-                    target="_blank"
-                    title="Open fullsize version"
-                    rel="noreferrer"
-                  >
-                    <ArrowTopRightOnSquareIcon className="h-5 w-5" />
-                  </a>
-                ) : (
-                  <a
-                    href={`https://twitter.com/intent/tweet?text=Check%20out%20this%20pic%0A%0Ahttps://photo-gallery-12.vercel.app/${currentImage.slug}/p/${index}`}
-                    className="rounded-full bg-black/50 p-2 text-gray-200/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-gray-200"
-                    target="_blank"
-                    title="Open fullsize version"
-                    rel="noreferrer"
-                  >
-                    <Twitter className="h-5 w-5" />
-                  </a>
-                )}
-                {/* <button
-                  onClick={() =>
-                    downloadPhoto(
-                      `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${currentImage.public_id}.${currentImage.format}`,
-                     `${currentImage.public_id}`
-                    )
-                  }
-                  className="rounded-full bg-black/50 p-2 text-gray-200/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-gray-200"
+              <div className="absolute top-0 right-0 flex items-center gap-2 p-3 text-white">
+                <button
+                  onClick={() => handleDownload(currentImage)}
+                  className="rounded-full bg-black/50 p-2 text-white/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-white"
                   title="Download fullsize version"
                 >
                   <ArrowDownTrayIcon className="h-5 w-5" />
-                </button> */}
+                </button>
               </div>
-              <div className="absolute left-0 top-0 flex items-center gap-2 p-3 text-gray-200">
+              <div className="absolute top-0 left-0 flex items-center gap-2 p-3 text-white">
                 <button
                   onClick={() => closeModal()}
-                  className="rounded-full bg-black/50 p-2 text-gray-200/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-gray-200"
+                  className="rounded-full bg-black/50 p-2 text-white/75 backdrop-blur-lg transition hover:bg-black/75 hover:text-white"
                 >
                   {navigation ? (
                     <XMarkIcon className="h-5 w-5" />
@@ -168,7 +147,7 @@ export default function SharedModal({
             <div className="fixed inset-x-0 bottom-0 z-40 overflow-hidden bg-gradient-to-b from-black/0 to-black/60">
               <motion.div
                 initial={false}
-                className="mx-auto mb-6 mt-6 flex aspect-[3/2] h-14"
+                className="mx-auto mt-6 mb-6 flex aspect-[3/2] h-14"
               >
                 <AnimatePresence initial={false}>
                   {filteredImages.map(({ public_id, format, id }) => (
@@ -202,7 +181,7 @@ export default function SharedModal({
                             ? "brightness-110 hover:brightness-110"
                             : "brightness-50 contrast-125 hover:brightness-75"
                         } h-full transform object-cover transition`}
-                        src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_scale,w_180/${public_id}.${format}`}
+                        src={`https:${currentImage.url}`}
                       />
                     </motion.button>
                   ))}

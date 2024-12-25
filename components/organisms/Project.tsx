@@ -18,7 +18,7 @@ export default function Project({size = 'md', children, asChild, className, titl
         <Link
           className="py-10 group flex flex-col justify-between rounded-sm bg-white p-4 shadow-xl transition-shadow hover:shadow-lg sm:p-6 lg:p-8"
           href={`/${name}`}
-          as={`/${encodeURIComponent(name)}`} 
+          as={`/${encodeURIComponent(slug)}`} 
         >
           <div>
             <h3 className="text-lg font-bold sm:text-xl bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">{title}</h3>

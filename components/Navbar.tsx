@@ -14,12 +14,12 @@ export default function Navbar(props) {
 
   const leftmenu = [
     {
-      label: "Photos",
+      label: "Photos / Fotos",
       href: "/",
       external: false
     },
     {
-      label: "About",
+      label: "About / Sobre",
       href: "/about",
       external: false
 

@@ -25,33 +25,29 @@ description: string;
 }
 
 interface AboutPageFields {
-heading: string;
-description: string;
-image: {
-    fields: ImageFields;
-};
-contact: {
-    fields: ContactFields;
-};
+  slug: string;
+  description: any;
+  title: string;
+  image: {
+      fields: ImageFields;
+  };
+  contacts: string[];
 }
   
   
 interface MyEntry extends Entry<AboutPageFields>{};
   
 type AboutPageData = {
-heading: string;
-description: any;
-updated_at: string;
-image: {
-    alt: string;
-    src: string;
-    width: number;
-    height: number;
-};
-contact: {
-    heading:string,
-    description:string
-}
+  heading: string;
+  description: any;
+  updated_at: string;
+  image: {
+      alt: string;
+      src: string;
+      width: number;
+      height: number;
+  };
+  contacts: string[];
 };
 
 interface aboutPageProps {
@@ -86,7 +82,23 @@ export default function About({ about }: aboutPageProps) {
         <div className="mx-auto prose text-center dark:prose-invert mt-14 leading-loose">
           <small className="text-gray-500"><em>Updated {about.updated_at}</em></small>
         </div>
-        {/* <Contact contacts={about.contact} siteconfig={''}/> */}
+        <div className="mx-auto mt-8">
+          <h2 className="text-xl font-semibold">Contacts</h2>
+          <ul className="list-none mt-4 space-y-2">
+            {about.contacts.map((contact, index) => (
+              <li key={index}>
+                <a
+                  href={contact}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 dark:text-blue-400 underline"
+                >
+                  {contact}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </Container>
     </>
 
@@ -95,24 +107,21 @@ export default function About({ about }: aboutPageProps) {
 
 
 export async function getStaticProps() {
-    const entry: MyEntry = await client.getEntry('1nkMIk8qurspwoWVOfunJh');
+    const entry: MyEntry = await client.getEntry('4J0qvM4MWlSNDFmTQUZyad');
     const aboutPage = {
-      heading: entry.fields.heading,
+      heading: entry.fields.title,
       description: entry.fields.description,
       updated_at: format(
-        new Date(entry.sys.updatedAt,),
+        new Date(entry.sys.updatedAt),
         'd MMM yyyy',
       ),
       image: {
-        alt:entry.fields.image.fields.title,
+        alt: entry.fields.image.fields.title,
         src: entry.fields.image.fields.file.url,
-        width:entry.fields.image.fields.file.details.image.width,
+        width: entry.fields.image.fields.file.details.image.width,
         height: entry.fields.image.fields.file.details.image.height
       },
-      contact: {
-        heading:entry.fields.contact?.fields?.heading,
-        description: entry.fields.contact?.fields?.description,
-      }
+      contacts: entry.fields.contacts
     };
   
     return {

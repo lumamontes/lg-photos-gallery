@@ -7,6 +7,7 @@ export interface ImageProps {
   format: string
   blurDataUrl?: string
   slug?: string
+  url?: string
 }
 
 export interface SharedModalProps {

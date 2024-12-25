@@ -7,8 +7,8 @@ export default function Footer(props) {
         Copyright © {new Date().getFullYear()} {props?.copyright}. All
         rights reserved.
       </div>
-      <div className="flex justify-center gap-1 mt-1 text-sm text-center text-gray-500 dark:text-gray-600">
-         Com ❤️ por  <a href="https://github.com/lumamontes" target="_blank" className="hover:to-blue-500">Luma</a>
+      <div className="flex justify-center gap-1 mt-1 text-[10px] text-center text-gray-500 dark:text-gray-600">
+         <a href="https://github.com/lumamontes" target="_blank" className="hover:to-blue-500">With/Com ❤️</a>
       </div>
     </Container>
   );

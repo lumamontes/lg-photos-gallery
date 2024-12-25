@@ -11,11 +11,11 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <title>Photo Gallery Demo</title>
         <meta
           property="og:image"
-          content="https://photo-gallery-12.vercel.app/og-image.png"
+          content="https://archivebyluana.vercel.app/og-image.png"
         />
         <meta
           name="twitter:image"
-          content="https://photo-gallery-12.vercel.app/og-image.png"
+          content="https://archivebyluana.vercel.app/og-image.png"
         />
       </Head>
       <Navbar />
