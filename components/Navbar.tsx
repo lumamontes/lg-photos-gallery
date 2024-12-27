@@ -24,6 +24,11 @@ export default function Navbar(props) {
       external: false
 
     },
+    {
+      label: "Blog",
+      href: "/blog",
+      external: false
+    },
   ];
   const rightmenu = !socialMediaLinks ? [] : socialMediaLinks;
 
