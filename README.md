@@ -1,7 +1,8 @@
 
 ### Photos Gallery Website
 
- ![image](https://github.com/lumamontes/photos-gallery/assets/60052718/839e8051-c655-4345-a6a0-d408d03d2dd7)
+![image](https://github.com/user-attachments/assets/6748c7f1-fb16-44c8-a1ff-a60036e70be7)
+
 
 This website is a photo gallery built using Next.js, Contentful, Cloudinary, and Tailwind. Its primary function is to showcase a portfolio of images, along with sample text for context. The website sources its data from Contentful CMS and utilizes static site generation for its page rendering.
 
@@ -10,8 +11,8 @@ Key features of the site include a photo gallery with images for each project an
 This website was based on the image gallery template from [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example), and the original demo is available [here](https://nextconf-images.vercel.app/)
 
 
-![image](https://github.com/lumamontes/photos-gallery/assets/60052718/f1df4de1-0808-454e-a040-8e6d51067269)
-![image](https://github.com/lumamontes/photos-gallery/assets/60052718/65c00633-cf4b-49fd-ba02-f3b539803a79)
+![image](https://github.com/user-attachments/assets/0046d397-daf1-4042-8682-4fc27fcf55a3)
+
 
 ### :bulb: Live
 
@@ -22,7 +23,6 @@ The demo is availible at: https://archivebyluana.vercel.app/
 - Next.js 
 - Tailwind
 - Contentful
-- Cloudinary
 - sharp and plaiceholder
 
 ###  Local Development
