@@ -19,7 +19,6 @@ const PhotoId: NextPage<PhotoIdProps> = ({ currentPhoto }) => {
   }
 
   const currentPhotoUrl = `https:${currentPhoto.url}`;
-  console.log('currentPhotoUrl', currentPhotoUrl)
   return (
     <>
       <Head>

@@ -1,8 +1,12 @@
+import { documentToReactComponents } from '@contentful/rich-text-react-renderer';
+import { BLOCKS } from "@contentful/rich-text-types";
+
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 import client from 'libs/contentful';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import { FiUser } from 'react-icons/fi';
 import Markdown from 'react-markdown'
 interface Post {
   first_publication_date: string | null;
@@ -39,23 +43,27 @@ export default function Post({ post }: PostProps) {
           <h1 className="text-4xl font-bold mb-6">{post.data.title}</h1>
           <div className="flex flex-col sm:flex-row gap-6 text-gray-600 mb-8">
             <time className="flex items-center gap-2 text-sm">
-              <FiCalendar className="text-lg" />
               {post.first_publication_date}
             </time>
             <p className="flex items-center gap-2 text-sm">
               <FiUser className="text-lg" />
               {post.data.author}
             </p>
-            <p className="flex items-center gap-2 text-sm">
-              <FiClock className="text-lg" />
-              {post.data.reading_time} min
-            </p>
           </div>
-          <div className="space-y-8">
-            <Markdown>
-              {post.data.content}
-            </Markdown>
-          </div>
+          <div className="space-y-8 py-8 pb-16">
+            {documentToReactComponents(post.data.content as any, {
+            renderNode: {
+              [BLOCKS.EMBEDDED_ASSET]: (node) => {
+                return (<Image
+                  src={`https:${node.data.target.fields.file.url}`}
+                  height={node.data.target.fields.file.details.image.height}
+                  width={node.data.target.fields.file.details.image.width}
+                  alt={node.data.target.fields.title}
+                />)
+              }
+            }
+          })}
+        </div>
         </article>
       </section>
   );
@@ -88,25 +96,6 @@ export async function getStaticProps({ params }: { params: { slug: string } }) {
 
   const post = entries.items[0].fields as any
 
-  const calculateReadingTime = (content: any[] | string) => {
-    if(content.length === 0) return 0;
-    const wordsPerMinute = 200;
-    if(typeof content === 'string') {
-      const words = content.split(' ').length;
-      return Math.ceil(words / wordsPerMinute);
-    }
-    const totalWords = content.reduce((acc, item) => {
-      if (item.nodeType === 'paragraph') {
-        return acc + item.content.reduce((acc, item) => {
-          return acc + item.value.split(' ').length;
-        }, 0);
-      }
-      return acc;
-    }
-    , 0);
-    return Math.ceil(totalWords / wordsPerMinute);
-  };
-
   const formattedPost = {
     first_publication_date: format(
       new Date(entries.items[0].sys.createdAt),
@@ -119,8 +108,7 @@ export async function getStaticProps({ params }: { params: { slug: string } }) {
       title: post.title,
       banner: post.banner?.fields?.file?.url || '',
       author: post.author || 'Luana',
-      reading_time: calculateReadingTime(post.content || []),
-      content: typeof post.content
+      content: post.post
     },
   };
 

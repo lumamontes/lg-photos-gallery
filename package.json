@@ -9,6 +9,7 @@
   "dependencies": {
     "@contentful/rich-text-html-renderer": "^17.0.0",
     "@contentful/rich-text-react-renderer": "^15.16.3",
+    "@contentful/rich-text-types": "^17.0.0",
     "@headlessui/react": "^1.7.4",
     "@heroicons/react": "^2.0.13",
     "@plaiceholder/next": "^3.0.0",
