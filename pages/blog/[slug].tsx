@@ -6,8 +6,6 @@ import ptBR from 'date-fns/locale/pt-BR';
 import client from 'libs/contentful';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { FiUser } from 'react-icons/fi';
-import Markdown from 'react-markdown'
 interface Post {
   first_publication_date: string | null;
   data: {
@@ -46,7 +44,6 @@ export default function Post({ post }: PostProps) {
               {post.first_publication_date}
             </time>
             <p className="flex items-center gap-2 text-sm">
-              <FiUser className="text-lg" />
               {post.data.author}
             </p>
           </div>

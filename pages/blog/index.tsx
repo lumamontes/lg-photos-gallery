@@ -1,15 +1,6 @@
-import Container from '@/components/container'
-import Navbar from '@/components/Navbar'
-import Project from '@/components/organisms/Project'
 import client from 'libs/contentful'
 import type { NextPage } from 'next'
-import Head from 'next/head'
-import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
-import {  Entry } from 'contentful';
-import { Heading } from '@/components/atoms/Heading'
-import { Text } from '@/components/atoms/Text'
 import { FiCalendar, FiUser } from 'react-icons/fi';
 import { format } from 'date-fns'
 import ptBR from 'date-fns/locale/pt-BR'
