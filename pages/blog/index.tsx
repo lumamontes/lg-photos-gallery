@@ -1,7 +1,6 @@
 import client from 'libs/contentful'
 import type { NextPage } from 'next'
 import Link from 'next/link'
-import { FiCalendar, FiUser } from 'react-icons/fi';
 import { format } from 'date-fns'
 import ptBR from 'date-fns/locale/pt-BR'
 
@@ -27,11 +26,9 @@ const Blogs: NextPage = ({posts} : { posts: BlogPost[]} ) => {
                   <p>{post.subtitle ?? post.title}</p>
                   <div className="info flex gap-6 mt-6">
                     <time className="flex items-center gap-2 text-sm">
-                      <FiCalendar className="text-lg" />
                       {post.first_publication_date}
                     </time>
                     <p className="flex items-center gap-2 text-sm">
-                      <FiUser className="text-lg" />
                       {post.author}
                     </p>
                   </div>
